@@ -1166,7 +1166,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // loop المتاجر عشان تكون infinite
     final looped = [..._stores, ..._stores, ..._stores];
     return SizedBox(
-      height: 105,
+      height: 120,
       child: ListView.builder(
         controller: _storesScrollController,
         scrollDirection: Axis.horizontal,
@@ -1574,7 +1574,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_stores.isEmpty) return const SizedBox();
     final looped = [..._stores, ..._stores, ..._stores];
     return Container(
-      height: 110,
+      height: 120,
       padding: const EdgeInsets.symmetric(vertical: 6),
       color: Colors.white,
       child: NotificationListener<ScrollNotification>(
@@ -1731,7 +1731,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         _buildSectionHeader('أشهر المتاجر', onAllTap: () => _onNavTap(1)),
         SizedBox(
-          height: 160,
+          height: 175,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1820,7 +1820,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
@@ -1831,7 +1831,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 11,
                         ),
                         textAlign: TextAlign.center,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -2011,7 +2011,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.center,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 6),
@@ -2022,7 +2022,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontSize: 11,
                               ),
                               textAlign: TextAlign.center,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
