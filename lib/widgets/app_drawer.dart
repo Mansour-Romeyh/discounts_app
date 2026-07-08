@@ -12,6 +12,9 @@ import '../screens/auth/profile_screen.dart';
 import '../screens/in_app_webview_screen.dart';
 import '../services/api_service.dart';
 import '../utils/theme.dart';
+import '../screens/savings_calculator_screen.dart';
+import '../screens/submit_coupon_screen.dart';
+
 
 class AppDrawer extends StatefulWidget {
   final SiteInfo? site;
@@ -292,6 +295,33 @@ class _AppDrawerState extends State<AppDrawer> {
                       widget.onSelectTab?.call(2);
                     },
                   ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.calculate_outlined,
+                    title: 'حاسبة التوفير الذكية',
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.add_circle_outline_rounded,
+                    title: 'اقترح كوبون جديد',
+                    isSelected: false,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
+                      );
+                    },
+                  ),
+
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.star_outline,

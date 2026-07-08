@@ -18,6 +18,9 @@ import '../widgets/store_item.dart';
 import '../widgets/filter_sheet.dart';
 import '../screens/all_coupons_screen.dart';
 import '../screens/top_offers_screen.dart';
+import 'savings_calculator_screen.dart';
+import 'submit_coupon_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1474,6 +1477,7 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         else ...[
           SliverToBoxAdapter(child: _buildHorizontalStoresCircleList()),
+          SliverToBoxAdapter(child: _buildToolsHubSection()),
           SliverToBoxAdapter(child: _buildFeaturedSection()),
           SliverToBoxAdapter(child: _buildTopCouponsSection()),
           SliverToBoxAdapter(child: _buildTopStoresSection()),
@@ -1482,6 +1486,150 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
+  Widget _buildToolsHubSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '🛠️  أدوات التوفير الذكية',
+            style: AppTheme.tajawal(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF444444),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              // Savings Calculator Card
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF8F00), Color(0xFFFFB300)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.calculate_outlined, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'حاسبة التوفير',
+                          style: AppTheme.tajawal(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'احسب خصم الكوبون وسجل أرباحك',
+                          style: AppTheme.tajawal(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Submit Coupon Card
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF3D00), Color(0xFFFF6D00)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.share_outlined, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'اقترح كوبون',
+                          style: AppTheme.tajawal(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'شارك كود خصم مع مجتمع كوبوني',
+                          style: AppTheme.tajawal(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildHomeShimmer() {
     return Shimmer.fromColors(

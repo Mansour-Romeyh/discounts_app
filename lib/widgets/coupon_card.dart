@@ -1,11 +1,14 @@
+import 'dart:ui';
 import 'package:discounts_app/models/coupon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 // import '../screens/in_app_webview_screen.dart'; // ✅ جديد
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/theme.dart';
 import 'dashed_border.dart';
+
 
 class ApiCouponCard extends StatefulWidget {
   final Coupon coupon;
@@ -27,10 +30,82 @@ class ApiCouponCard extends StatefulWidget {
 }
 
 class _ApiCouponCardState extends State<ApiCouponCard> {
+  bool? _votedWorked;
+  int _workedCount = 0;
+  int _expiredCount = 0;
+
+
+
   @override
   void initState() {
     super.initState();
+    _loadVoteState();
   }
+
+  void _loadVoteState() async {
+    final seedWorked = (widget.coupon.id.hashCode % 15) + 4;
+    final seedExpired = (widget.coupon.id.hashCode % 3);
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final vote = prefs.getBool('vote_${widget.coupon.id}');
+      if (mounted) {
+        setState(() {
+          _votedWorked = vote;
+          _workedCount = seedWorked + (vote == true ? 1 : 0);
+          _expiredCount = seedExpired + (vote == false ? 1 : 0);
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _workedCount = seedWorked;
+          _expiredCount = seedExpired;
+        });
+      }
+    }
+  }
+
+  Future<void> _vote(bool worked) async {
+    if (_votedWorked == worked) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('vote_${widget.coupon.id}', worked);
+
+      setState(() {
+        if (_votedWorked == null) {
+          if (worked) {
+            _workedCount++;
+          } else {
+            _expiredCount++;
+          }
+        } else {
+          if (worked) {
+            _workedCount++;
+            _expiredCount = (_expiredCount - 1).clamp(0, 9999);
+          } else {
+            _expiredCount++;
+            _workedCount = (_workedCount - 1).clamp(0, 9999);
+          }
+        }
+        _votedWorked = worked;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+            worked ? 'تم تسجيل نجاح الكوبون! 👍' : 'تم تسجيل عدم فعالية الكوبون! 👎',
+            style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          backgroundColor: worked ? AppTheme.accent : Colors.redAccent,
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } catch (_) {}
+  }
+
 
   @override
   void dispose() {
@@ -52,7 +127,7 @@ class _ApiCouponCardState extends State<ApiCouponCard> {
           content: Row(children: [
             const Icon(Icons.copy, color: Colors.white, size: 18),
             const SizedBox(width: 8),
-            Text('تم نسخ الكود مرة تانية',
+            Text('تم نسخ الكود بنجاح',
                 style: AppTheme.tajawal(
                     color: Colors.white, fontWeight: FontWeight.bold)),
           ]),
@@ -78,7 +153,7 @@ class _ApiCouponCardState extends State<ApiCouponCard> {
         content: Row(children: [
           const Icon(Icons.check_circle, color: Colors.white, size: 18),
           const SizedBox(width: 8),
-          Text('تم نسخ الكود: ${widget.coupon.code}',
+          Text('تم نسخ الكود بنجاح',
               style: AppTheme.tajawal(
                   color: Colors.white, fontWeight: FontWeight.bold)),
         ]),
@@ -252,40 +327,41 @@ class _ApiCouponCardState extends State<ApiCouponCard> {
                 Row(
                   children: [
                     Expanded(
-                      child: DashedBorder(
-                        color: const Color(0xFFE0E0E0),
-                        strokeWidth: 1.5,
-                        dashWidth: 6,
-                        dashSpace: 4,
-                        borderRadius: 12,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              widget.coupon.code,
-                              style: AppTheme.tajawal(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                                letterSpacing: 2,
+                      child: GestureDetector(
+                        onTap: _revealAndOpen,
+                        child: DashedBorder(
+                          color: const Color(0xFFE0E0E0),
+                          strokeWidth: 1.5,
+                          dashWidth: 6,
+                          dashSpace: 4,
+                          borderRadius: 12,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 5,
+                                  sigmaY: 5,
+                                ),
+                                child: Text(
+                                  widget.coupon.code,
+                                  style: AppTheme.tajawal(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textPrimary,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: _copyCode,
-                              child: const Icon(
-                                Icons.copy_rounded,
-                                size: 18,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 12),
                 
                 // ─── زر تفعيل الخصم (الأحمر/الكورال) ──────────────────────────────
@@ -310,6 +386,94 @@ class _ApiCouponCardState extends State<ApiCouponCard> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                Divider(color: Colors.grey.shade100, height: 1),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'هل اشتغل الكوبون معك؟',
+                      style: AppTheme.tajawal(fontSize: 11, color: Colors.grey.shade600),
+                    ),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _vote(true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _votedWorked == true 
+                                  ? AppTheme.accent.withOpacity(0.12)
+                                  : Colors.grey.withOpacity(0.04),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _votedWorked == true 
+                                    ? AppTheme.accent.withOpacity(0.3)
+                                    : Colors.transparent
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.thumb_up_alt_rounded, 
+                                  size: 14, 
+                                  color: _votedWorked == true ? AppTheme.accent : Colors.grey.shade500
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '($_workedCount) نعم',
+                                  style: AppTheme.tajawal(
+                                    fontSize: 11, 
+                                    color: _votedWorked == true ? AppTheme.accent : Colors.grey.shade700,
+                                    fontWeight: _votedWorked == true ? FontWeight.bold : FontWeight.normal
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _vote(false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _votedWorked == false 
+                                  ? Colors.redAccent.withOpacity(0.12)
+                                  : Colors.grey.withOpacity(0.04),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _votedWorked == false 
+                                    ? Colors.redAccent.withOpacity(0.3)
+                                    : Colors.transparent
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.thumb_down_alt_rounded, 
+                                  size: 14, 
+                                  color: _votedWorked == false ? Colors.redAccent : Colors.grey.shade500
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '($_expiredCount) لا',
+                                  style: AppTheme.tajawal(
+                                    fontSize: 11, 
+                                    color: _votedWorked == false ? Colors.redAccent : Colors.grey.shade700,
+                                    fontWeight: _votedWorked == false ? FontWeight.bold : FontWeight.normal
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
               ],
             ),
           ),

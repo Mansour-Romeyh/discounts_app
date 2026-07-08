@@ -266,7 +266,7 @@ class _TopOffersScreenState extends State<TopOffersScreen> {
           await Clipboard.setData(ClipboardData(text: coupon.code));
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('تم نسخ الكوبون: ${coupon.code}',
+            content: Text('تم نسخ الكود بنجاح',
                 style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold)),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
