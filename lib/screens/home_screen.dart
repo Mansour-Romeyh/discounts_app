@@ -1315,9 +1315,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Row(
               children: [
-                _navItem(2, Icons.star_rounded, 'المفضلة'),
+                _navItem(3, Icons.star_rounded, 'المفضلة'),
                 const SizedBox(width: 12),
-                _navItem(3, Icons.more_horiz_rounded, 'المزيد', () {
+                _navItem(4, Icons.more_horiz_rounded, 'المزيد', () {
                   _scaffoldKey.currentState?.openDrawer();
                 }),
               ],
