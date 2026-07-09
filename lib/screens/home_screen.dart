@@ -20,6 +20,8 @@ import '../screens/all_coupons_screen.dart';
 import '../screens/top_offers_screen.dart';
 import 'savings_calculator_screen.dart';
 import 'submit_coupon_screen.dart';
+import 'spin_wheel_screen.dart';
+import '../services/notification_service.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -106,6 +108,45 @@ class _HomeScreenState extends State<HomeScreen> {
       'https://whatsapp.com/channel/0029VaoUhiYATRShF1gyEc2p';
 
   List<String> _favoriteCouponIds = [];
+  bool _dailyReminderEnabled = true;
+
+  Future<void> _loadNotificationPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _dailyReminderEnabled = prefs.getBool('daily_reminder_enabled') ?? true;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _toggleDailyReminder(bool value) async {
+    setState(() {
+      _dailyReminderEnabled = value;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('daily_reminder_enabled', value);
+      if (value) {
+        await NotificationService.scheduleDailyReminder();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('تم تفعيل التذكير اليومي بنجاح 🔔', style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold)),
+            backgroundColor: AppTheme.accent,
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+      } else {
+        await NotificationService.cancelDailyReminder();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('تم إيقاف التذكير اليومي 🔕', style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold)),
+            backgroundColor: Colors.grey,
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+      }
+    } catch (_) {}
+  }
 
   Future<void> _loadFavorites() async {
     try {
@@ -167,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _pageController = PageController(initialPage: 0);
     _loadData();
     _loadFavorites();
+    _loadNotificationPreference();
     _bannerTimer = Timer.periodic(const Duration(milliseconds: 2500), (_) {
       if (mounted) {
         setState(
@@ -625,15 +667,46 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         color: AppTheme.primary,
         onRefresh: _loadData,
-        child: IndexedStack(
-          index: _selectedNavIndex,
+        child: Column(
           children: [
-            _buildHomeTab(),
-            _buildStoresTab(),
-            _buildToolsTab(),
-            _buildFavoritesTab(),
+            _buildOfflineBanner(),
+            Expanded(
+              child: IndexedStack(
+                index: _selectedNavIndex,
+                children: [
+                  _buildHomeTab(),
+                  _buildStoresTab(),
+                  _buildToolsTab(),
+                  _buildFavoritesTab(),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildOfflineBanner() {
+    if (!ApiService.isOfflineMode) return const SizedBox();
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF555555),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            'أنت تتصفح الكوبونات المحفوظة حالياً دون اتصال بالإنترنت',
+            style: AppTheme.tajawal(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1617,6 +1690,74 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          // Spin Wheel Banner inside Home Tab Tools section
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SpinWheelScreen(coupons: _coupons),
+                ),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF311B92), Color(0xFF673AB7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.deepPurple.withOpacity(0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.toys_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'عجلة التوفير اليومية 🎁',
+                          style: AppTheme.tajawal(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'أدر العجلة واربح خصومات ونصائح ذكية',
+                          style: AppTheme.tajawal(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -2253,239 +2394,354 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildGridToolCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradientColors,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[1].withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // Decorative background circles for a modern glassmorphic look
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -30,
+                bottom: -30,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 28),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: AppTheme.tajawal(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          subtitle,
+                          style: AppTheme.tajawal(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 11,
+                            height: 1.3,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToolsAppBar() => SliverAppBar(
+        automaticallyImplyLeading: false,
+        floating: true,
+        pinned: true,
+        elevation: 0,
+        titleSpacing: 8,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFD84315),
+                AppTheme.primary,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'الأدوات',
+                  style: AppTheme.tajawal(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'التنبيهات',
+                  style: AppTheme.tajawal(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Switch.adaptive(
+                  value: _dailyReminderEnabled,
+                  activeColor: Colors.white,
+                  activeTrackColor: Colors.white.withOpacity(0.3),
+                  inactiveThumbColor: Colors.grey.shade400,
+                  inactiveTrackColor: Colors.white12,
+                  onChanged: _toggleDailyReminder,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
   Widget _buildToolsTab() {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        _buildAppBar(),
+        _buildToolsAppBar(),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                  child: Text(
-                    'أدوات التوفير الذكية',
-                    style: AppTheme.tajawal(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textSecondaryinWhite,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 
-                // Tool 1: Savings Calculator Card
+                // Featured Tool (Full width)
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => SpinWheelScreen(coupons: _coupons),
+                      ),
                     );
                   },
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFE65100), Color(0xFFFF9800)],
+                        colors: [Color(0xFF311B92), Color(0xFF7E57C2)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.orange.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+                          color: const Color(0xFF673AB7).withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
                         )
                       ],
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.calculate_rounded, color: Colors.white, size: 36),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'حاسبة التوفير الذكية',
-                                style: AppTheme.tajawal(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            right: -40,
+                            top: -40,
+                            child: Container(
+                              width: 150,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'احسب قيمة الخصومات والنسب مئوية والوفر الفعلي لمنتجاتك فورياً مع سجل للعمليات.',
-                                style: AppTheme.tajawal(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Tool 2: Submit Coupon Card
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF00796B), Color(0xFF00BFA5)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                          Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          'حصري وتفاعلي 🎁',
+                                          style: AppTheme.tajawal(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'عجلة الحظ اليومية',
+                                        style: AppTheme.tajawal(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 22,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'أدر العجلة واربح أحدث الكوبونات الحصرية أو نصائح التوفير المذهلة!',
+                                        style: AppTheme.tajawal(
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontSize: 13,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.toys_rounded, color: Colors.white, size: 48),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.teal.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.add_moderator_rounded, color: Colors.white, size: 36),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'شارك واقترح كوبون خصم',
-                                style: AppTheme.tajawal(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'ساهم في نشر أكواد التوفير وشاركها مع المجتمع لتحصل على تفاعل وتقييمات إيجابية.',
-                                style: AppTheme.tajawal(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
-                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-                // Tool 3: All Coupons
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AllCouponsScreen(coupons: _coupons)),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFC2185B), Color(0xFFEC407A)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.pink.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        )
-                      ],
+                // 2x2 Grid using GridView
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.85,
+                  children: [
+                    _buildGridToolCard(
+                      title: 'حاسبة التوفير',
+                      subtitle: 'احسب قيمة الخصومات بدقة وفورية.',
+                      icon: Icons.calculate_rounded,
+                      gradientColors: const [Color(0xFFE65100), Color(0xFFFF9800)],
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
+                        );
+                      },
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 36),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'تصفح جميع الكوبونات',
-                                style: AppTheme.tajawal(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'شاهد تشكيلة كاملة من كوبونات الخصم المفعلة والمحدثة يومياً لجميع الماركات.',
-                                style: AppTheme.tajawal(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
-                      ],
+                    _buildGridToolCard(
+                      title: 'شارك كوبون',
+                      subtitle: 'اقترح وانشر كوبونات للمجتمع.',
+                      icon: Icons.add_moderator_rounded,
+                      gradientColors: const [Color(0xFF00796B), Color(0xFF26A69A)],
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
+                        );
+                      },
                     ),
-                  ),
+                    _buildGridToolCard(
+                      title: 'كل الكوبونات',
+                      subtitle: 'تصفح قائمة الكوبونات كاملة.',
+                      icon: Icons.local_offer_rounded,
+                      gradientColors: const [Color(0xFFC2185B), Color(0xFFF06292)],
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => AllCouponsScreen(coupons: _coupons)),
+                        );
+                      },
+                    ),
+                    _buildGridToolCard(
+                      title: 'المفضلة',
+                      subtitle: 'الوصول السريع للكوبونات المحفوظة.',
+                      icon: Icons.favorite_rounded,
+                      gradientColors: const [Color(0xFF0277BD), Color(0xFF29B6F6)],
+                      onTap: () {
+                         setState(() {
+                           _selectedNavIndex = 3;
+                         });
+                      },
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 40),
               ],
             ),
           ),

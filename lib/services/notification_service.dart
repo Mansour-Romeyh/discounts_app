@@ -94,6 +94,90 @@ class NotificationService {
     if (initialMessage != null) {
       _handleNotificationData(initialMessage.data);
     }
+
+    // 9. Schedule daily local reminder
+    await scheduleDailyReminder();
+  }
+
+  // ─── Schedule Daily Local Reminder ─────────────────────────────
+  static Future<void> scheduleDailyReminder() async {
+    const androidDetails = AndroidNotificationDetails(
+      'daily_reminder_channel',
+      'تذكير يومي للتوفير',
+      channelDescription: 'تذكير يومي بأفضل العروض وكوبونات الخصم',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    try {
+      // Schedule a daily periodic notification
+      await _localNotifications.periodicallyShow(
+        999, // Constant notification ID for daily reminder
+        'أدِر عجلة التوفير اليومية! 🎁',
+        'لا تفوت فرصة الفوز بكوبونات خصم ونقاط إضافية اليوم. أدر العجلة الآن!',
+        RepeatInterval.daily,
+        const NotificationDetails(
+          android: androidDetails,
+          iOS: iosDetails,
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+      debugPrint('🔔 Daily reminder scheduled successfully!');
+    } catch (e) {
+      debugPrint('❌ Error scheduling daily reminder: $e');
+    }
+  }
+
+  // ─── Cancel Daily Local Reminder ───────────────────────────────
+  static Future<void> cancelDailyReminder() async {
+    try {
+      await _localNotifications.cancel(999);
+      debugPrint('🔔 Daily reminder cancelled successfully!');
+    } catch (e) {
+      debugPrint('❌ Error cancelling daily reminder: $e');
+    }
+  }
+
+  // ─── Show Instant Test Notification ────────────────────────────
+  static Future<void> showInstantTestNotification() async {
+    const androidDetails = AndroidNotificationDetails(
+      'test_channel',
+      'إشعار تجريبي',
+      channelDescription: 'قناة اختبار الإشعارات الفورية',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    try {
+      await _localNotifications.show(
+        888, // Constant ID for test
+        'إشعار تجريبي من كوبوني 🎉',
+        'تهانينا! الإشعارات تعمل بشكل سليم على جهازك. وفر حتى 70% الآن!',
+        const NotificationDetails(
+          android: androidDetails,
+          iOS: iosDetails,
+        ),
+      );
+      debugPrint('🔔 Test notification sent successfully!');
+    } catch (e) {
+      debugPrint('❌ Error sending test notification: $e');
+    }
   }
 
   // ─── Show local notification ──────────────────────────────────

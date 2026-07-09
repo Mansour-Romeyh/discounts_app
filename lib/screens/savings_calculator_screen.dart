@@ -26,6 +26,7 @@ class _SavingsCalculatorScreenState extends State<SavingsCalculatorScreen> {
 
   List<Map<String, dynamic>> _history = [];
   double _totalSaved = 0.0;
+  double _savingsGoal = 1000.0; // Target savings goal
 
   @override
   void initState() {
@@ -78,15 +79,34 @@ class _SavingsCalculatorScreenState extends State<SavingsCalculatorScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final historyStr = prefs.getString('savings_history');
+      final goalVal = prefs.getDouble('savings_goal') ?? 1000.0;
       if (historyStr != null) {
         final List<dynamic> decoded = jsonDecode(historyStr);
         setState(() {
           _history = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
           _calculateTotalSaved();
+          _savingsGoal = goalVal;
+        });
+      } else {
+        setState(() {
+          _savingsGoal = goalVal;
         });
       }
     } catch (e) {
       debugPrint('Error loading savings history: $e');
+    }
+  }
+
+  Future<void> _updateSavingsGoal(double newGoal) async {
+    if (newGoal <= 0) return;
+    setState(() {
+      _savingsGoal = newGoal;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('savings_goal', newGoal);
+    } catch (e) {
+      debugPrint('Error saving savings goal: $e');
     }
   }
 
@@ -248,6 +268,14 @@ class _SavingsCalculatorScreenState extends State<SavingsCalculatorScreen> {
               _buildStatsCard(),
               const SizedBox(height: 16),
 
+              // ─── Savings Goal Card ──────────────────────────────────────────
+              _buildGoalCard(),
+              const SizedBox(height: 16),
+
+              // ─── Interactive Savings Chart ──────────────────────────────────
+              _buildSavingsChart(),
+              if (_history.isNotEmpty) const SizedBox(height: 20),
+
               // ─── Calculator Live Display Card ──────────────────────────────
               _buildLiveDisplayCard(),
               const SizedBox(height: 20),
@@ -269,6 +297,339 @@ class _SavingsCalculatorScreenState extends State<SavingsCalculatorScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSavingsChart() {
+    if (_history.isEmpty) return const SizedBox();
+
+    // Group history by store
+    final Map<String, double> storeSavings = {};
+    double maxSaving = 0.0;
+    for (var item in _history) {
+      final store = item['store']?.toString().trim() ?? 'تسوق عام';
+      final saved = (item['savedAmount'] as num?)?.toDouble() ?? 0.0;
+      storeSavings[store] = (storeSavings[store] ?? 0.0) + saved;
+    }
+
+    // Sort by savings descending
+    final sortedStores = storeSavings.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    // Get max savings value for scaling
+    final topStores = sortedStores.take(4).toList();
+    for (var entry in topStores) {
+      if (entry.value > maxSaving) {
+        maxSaving = entry.value;
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEBEBEB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bar_chart_rounded, color: AppTheme.accent, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'تحليل التوفير حسب المتاجر',
+                style: AppTheme.tajawal(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...topStores.map((entry) {
+            final store = entry.key;
+            final amount = entry.value;
+            final ratio = maxSaving > 0 ? (amount / maxSaving) : 0.0;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        store,
+                        style: AppTheme.tajawal(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      Text(
+                        amount.toStringAsFixed(2),
+                        style: AppTheme.tajawal(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 500),
+                            width: constraints.maxWidth * ratio,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF00796B), Color(0xFF00BFA5)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  void _showEditGoalDialog() {
+    final controller = TextEditingController(text: _savingsGoal.toStringAsFixed(0));
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('تعديل هدف التوفير',
+            style: AppTheme.tajawal(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('حدد المبلغ المستهدف للتوفير بالريال:',
+                style: AppTheme.tajawal(fontSize: 13, color: Colors.grey.shade600)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                suffixText: 'ر.س',
+                suffixStyle: AppTheme.tajawal(color: Colors.grey),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('إلغاء',
+                style: AppTheme.tajawal(color: Colors.grey, fontSize: 14)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = double.tryParse(controller.text) ?? 0.0;
+              if (val > 0) {
+                _updateSavingsGoal(val);
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('حفظ',
+                style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalCard() {
+    final progressRatio = (_totalSaved / _savingsGoal).clamp(0.0, 1.0);
+    final percentage = (progressRatio * 100).toStringAsFixed(0);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFEBEBEB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.track_changes_rounded, color: AppTheme.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    'هدف التوفير الشخصي',
+                    style: AppTheme.tajawal(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: _showEditGoalDialog,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_rounded, color: AppTheme.primary, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        'تعديل الهدف',
+                        style: AppTheme.tajawal(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'التقدم المحرز: $percentage%',
+                style: AppTheme.tajawal(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: progressRatio >= 1.0 ? Colors.green : Colors.grey.shade700,
+                ),
+              ),
+              Text(
+                '${_totalSaved.toStringAsFixed(0)} / ${_savingsGoal.toStringAsFixed(0)} ر.س',
+                style: AppTheme.tajawal(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    width: constraints.maxWidth * progressRatio,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: progressRatio >= 1.0
+                            ? [Colors.green.shade600, Colors.greenAccent.shade400]
+                            : [AppTheme.primary, AppTheme.primaryLight],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          if (progressRatio >= 1.0) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events_rounded, color: Colors.green, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'تهانينا! لقد حققت هدف التوفير الخاص بك بنجاح! 🏆',
+                      style: AppTheme.tajawal(
+                        fontSize: 11,
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
