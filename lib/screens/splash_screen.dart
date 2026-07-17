@@ -50,13 +50,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF5A623), Color(0xFFE8940F)],
-          ),
-        ),
+        color: Colors.white,
         child: Stack(
           children: [
             // Subtle wave pattern overlay
@@ -73,12 +67,12 @@ class _SplashScreenState extends State<SplashScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
-                        'assets/images/Logo_w.png',
+                        'assets/images/app_logo.png',
                         width: 220,
                         errorBuilder: (_, __, ___) => Text(
                           'COUPONEY',
                           style: AppTheme.tajawal(
-                            color: Colors.white,
+                            color: Colors.black87,
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 4,
@@ -101,7 +95,7 @@ class _WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.06)
+      ..color = Colors.grey.withOpacity(0.08)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
