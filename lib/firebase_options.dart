@@ -38,11 +38,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA0b8Ew9k_2MbXM_FXs2KblvE2YTDm1aCE',
-    appId: '1:837515316023:ios:0ab7f3f2c55d98ca65e8b2',
+    appId: '1:837515316023:ios:cb235dd33f776b2565e8b2',
     messagingSenderId: '837515316023',
     projectId: 'couponey-fcm-a7d2b',
     storageBucket: 'couponey-fcm-a7d2b.firebasestorage.app',
-    iosBundleId: 'com.coupon.coupondiscountapp',
+    iosBundleId: 'com.mansour.threeapp',
   );
 
 }
