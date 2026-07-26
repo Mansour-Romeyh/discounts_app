@@ -669,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => TopOffersScreen(coupons: _coupons),
+                    builder: (_) => AllCouponsScreen(coupons: _coupons),
                   ),
                 );
               }
@@ -1714,14 +1714,14 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF311B92), Color(0xFF673AB7)],
+                  colors: [Color(0xFFE64A19), Color(0xFFFC4F04)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.15),
+                    color: AppTheme.primary.withOpacity(0.15),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   )
@@ -1921,88 +1921,99 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: topCoupons.length,
             itemBuilder: (context, i) {
               final coupon = topCoupons[i];
-              return Container(
-                width: 155,
-                margin: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEBEBEB), width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: coupon.storeLogo.isNotEmpty
-                            ? Image.network(
-                                coupon.storeLogo,
-                                height: 48,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Text(
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AllCouponsScreen(coupons: _coupons),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 155,
+                  margin: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFEBEBEB), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: coupon.storeLogo.isNotEmpty
+                              ? Image.network(
+                                  coupon.storeLogo,
+                                  height: 48,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Text(
+                                    coupon.storeName,
+                                    style: AppTheme.tajawal(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : Text(
                                   coupon.storeName,
                                   style: AppTheme.tajawal(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: const Color(0xFF333333)),
                                   textAlign: TextAlign.center,
                                 ),
-                              )
-                            : Text(
-                                coupon.storeName,
-                                style: AppTheme.tajawal(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: const Color(0xFF333333)),
-                                textAlign: TextAlign.center,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () async {
-                        await Clipboard.setData(ClipboardData(text: coupon.code));
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text('تم نسخ الكود: ${coupon.code}',
-                                style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold)),
-                            backgroundColor: const Color(0xFFFF485A),
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 2),
-                          ));
-                        }
-                        if (coupon.storeUrl.isNotEmpty) {
-                          await Future.delayed(const Duration(milliseconds: 600));
-                          _launch(coupon.storeUrl);
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF485A), // Vibrant red/pink matching screenshot button
-                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          'نسخ الكود',
-                          style: AppTheme.tajawal(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () async {
+                          await Clipboard.setData(ClipboardData(text: coupon.code));
+                          ApiService.incrementCouponVisits(coupon.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('تم نسخ الكود: ${coupon.code}',
+                                  style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold)),
+                              backgroundColor: AppTheme.primary,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ));
+                          }
+                          if (coupon.storeUrl.isNotEmpty) {
+                            await Future.delayed(const Duration(milliseconds: 600));
+                            _launch(coupon.storeUrl);
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary,
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          textAlign: TextAlign.center,
+                          child: Text(
+                            'نسخ الكود',
+                            style: AppTheme.tajawal(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -2100,24 +2111,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        discount,
-                        style: AppTheme.tajawal(
-                          color: const Color(0xFFFF485A), // Pinkish-red discount label
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         store.name,
                         style: AppTheme.tajawal(
-                          color: const Color(0xFF888888),
-                          fontSize: 11,
+                          color: const Color(0xFF333333),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
@@ -2976,14 +2976,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF311B92), Color(0xFF7E57C2)],
+                        colors: [Color(0xFFE64A19), Color(0xFFFC4F04)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF673AB7).withOpacity(0.3),
+                          color: AppTheme.primary.withOpacity(0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         )

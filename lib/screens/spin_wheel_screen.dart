@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../models/coupon.dart';
 import '../utils/theme.dart';
 import '../services/remote_config_service.dart';
+import '../services/api_service.dart';
 
 class SpinWheelScreen extends StatefulWidget {
   final List<Coupon> coupons;
@@ -318,13 +319,16 @@ class _SpinWheelScreenState extends State<SpinWheelScreen>
                             onPressed: () {
                               Clipboard.setData(
                                   ClipboardData(text: winner['code']));
+                              if (winner['id'] != null) {
+                                ApiService.incrementCouponVisits(winner['id'].toString());
+                              }
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'تم نسخ الكود: ${winner['code']}',
                                     style: AppTheme.tajawal(color: Colors.white),
                                   ),
-                                  backgroundColor: const Color(0xFFFF485A),
+                                  backgroundColor: AppTheme.primary,
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );

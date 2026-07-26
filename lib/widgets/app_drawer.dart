@@ -336,6 +336,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     title: 'شارك التطبيق',
                     onTap: () {
                       Navigator.pop(context);
+                      _launch('https://apps.apple.com/us/app/copony-كوبوني/id6792677261');
                     },
                   ),
                   const SizedBox(height: 16),

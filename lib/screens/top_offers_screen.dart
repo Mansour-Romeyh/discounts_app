@@ -6,6 +6,7 @@ import '../models/coupon.dart';
 import '../widgets/coupon_card.dart';
 import '../utils/theme.dart';
 import '../services/remote_config_service.dart';
+import '../services/api_service.dart';
 
 class TopOffersScreen extends StatefulWidget {
   final List<Coupon> coupons;
@@ -265,6 +266,7 @@ class _TopOffersScreenState extends State<TopOffersScreen> {
         // 1. نسخ الكوبون إذا وجد
         if (coupon.code.isNotEmpty) {
           await Clipboard.setData(ClipboardData(text: coupon.code));
+          ApiService.incrementCouponVisits(coupon.id);
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('تم نسخ الكود بنجاح',

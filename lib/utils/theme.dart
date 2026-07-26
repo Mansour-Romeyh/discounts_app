@@ -7,10 +7,10 @@ class AppTheme {
   static const Color cardBg = Color(0xFFFFFFFF);
   static const Color cardBorder = Color(0xFFE5E7EB);
 
-  static const Color primary = Color(0xFF4F46E5); // Indigo
-  static const Color primaryLight = Color(0xFF818CF8);
-  static const Color secondary = Color(0xFF6366F1); // Medium Indigo
-  static const Color accent = Color(0xFF10B981); // Emerald Green
+  static const Color primary = Color(0xFFFC4F04); // #FC4F04 Brand Accent
+  static const Color primaryLight = Color(0xFFFF7E47);
+  static const Color secondary = Color(0xFFFC4F04);
+  static const Color accent = Color(0xFFFC4F04);
 
   static const Color textPrimary = Colors.black;
   static const Color textSecondaryinBlack = Color.fromARGB(190, 100, 116, 139);
@@ -18,8 +18,8 @@ class AppTheme {
   static const Color divider = Color(0xFFE2E8F0);
 
   static const Map<String, Color> badgeColors = {
-    'حصري': Color(0xFF4F46E5), // Indigo
-    'مميز': Color(0xFF10B981), // Emerald
+    'حصري': Color(0xFFFC4F04),
+    'مميز': Color(0xFFFC4F04),
     'جديد': Color(0xFFF43F5E), // Rose/Pink
     'عرض خاص': Color(0xFFEF4444),
   };

@@ -1156,14 +1156,14 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF311B92), Color(0xFF673AB7)],
+                  colors: [Color(0xFFE64A19), Color(0xFFFC4F04)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.2),
+                    color: AppTheme.primary.withOpacity(0.2),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   )

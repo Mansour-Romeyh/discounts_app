@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../utils/theme.dart';
 
 class SubmitCouponScreen extends StatefulWidget {
@@ -62,18 +63,21 @@ class _SubmitCouponScreenState extends State<SubmitCouponScreen> {
       _isSubmitting = true;
     });
 
-    // محاكاة الاتصال بالسيرفر
-    await Future.delayed(const Duration(seconds: 2));
+    final storeName = _storeNameController.text.trim();
+    final couponCode = _couponCodeController.text.trim().toUpperCase();
+    final discount = _discountController.text.trim();
+    final description = _descriptionController.text.trim();
+    final storeUrl = _storeUrlController.text.trim();
 
     final newSubmission = {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'storeName': _storeNameController.text.trim(),
-      'couponCode': _couponCodeController.text.trim().toUpperCase(),
-      'discount': _discountController.text.trim(),
-      'description': _descriptionController.text.trim(),
-      'storeUrl': _storeUrlController.text.trim(),
+      'storeName': storeName,
+      'couponCode': couponCode,
+      'discount': discount,
+      'description': description,
+      'storeUrl': storeUrl,
       'date': DateTime.now().toIso8601String(),
-      'status': 'قيد المراجعة', // Pending review
+      'status': 'قيد المراجعة',
     };
 
     setState(() {
@@ -84,7 +88,25 @@ class _SubmitCouponScreenState extends State<SubmitCouponScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('my_coupon_submissions', jsonEncode(_mySubmissions));
-      
+
+      final message = '''
+*اقتراح كوبون جديد 🎁*
+• *المتجر:* $storeName
+• *كود الكوبون:* $couponCode
+• *قيمة الخصم:* $discount
+• *التفاصيل:* $description
+${storeUrl.isNotEmpty ? '• *رابط المتجر:* $storeUrl' : ''}
+''';
+
+      final encoded = Uri.encodeComponent(message);
+      final whatsappUri = Uri.parse('https://wa.me/201203994799?text=$encoded');
+
+      try {
+        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        debugPrint('Error launching WhatsApp: $e');
+      }
+
       // Clear inputs
       _storeNameController.clear();
       _couponCodeController.clear();
