@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/theme.dart';
-import '../screens/savings_calculator_screen.dart';
 import '../screens/spin_wheel_screen.dart';
 
 class ReviewStoreView extends StatefulWidget {
@@ -1083,66 +1082,7 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
   Widget _buildQuickToolsRow() {
     return Row(
       children: [
-        // Savings Calculator Card
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
-              ).then((_) => _loadHistory());
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE65100), Color(0xFFFF9800)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  )
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.calculate_outlined, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'حاسبة التوفير',
-                    style: AppTheme.tajawal(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'سجل نفقاتك ومقدار خصمك',
-                    style: AppTheme.tajawal(
-                      color: Colors.white.withOpacity(0.85),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
+
         // Daily Tips Wheel Card
         Expanded(
           child: GestureDetector(

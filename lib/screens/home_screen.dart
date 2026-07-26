@@ -19,7 +19,6 @@ import '../widgets/store_item.dart';
 import '../widgets/filter_sheet.dart';
 import '../screens/all_coupons_screen.dart';
 import '../screens/top_offers_screen.dart';
-import 'savings_calculator_screen.dart';
 import 'submit_coupon_screen.dart';
 import 'spin_wheel_screen.dart';
 import '../services/notification_service.dart';
@@ -1575,106 +1574,47 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              // Savings Calculator Card
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF8F00), Color(0xFFFFB300)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.orange.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.calculate_outlined, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'حاسبة التوفير',
-                          style: AppTheme.tajawal(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'احسب خصم الكوبون وسجل أرباحك',
-                          style: AppTheme.tajawal(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          // Submit Coupon Card
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF3D00), Color(0xFFFF6D00)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ],
               ),
-              const SizedBox(width: 12),
-              // Submit Coupon Card
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF3D00), Color(0xFFFF6D00)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(Icons.share_outlined, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.share_outlined, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(height: 16),
                         Text(
                           'اقترح كوبون',
                           style: AppTheme.tajawal(
@@ -1683,7 +1623,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           'شارك كود خصم مع مجتمع كوبوني',
                           style: AppTheme.tajawal(
@@ -1694,9 +1634,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 12),
           // Spin Wheel Banner inside Home Tab Tools section
@@ -3077,18 +3018,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 0.85,
                   children: [
-                    _buildGridToolCard(
-                      title: 'حاسبة التوفير',
-                      subtitle: 'احسب قيمة الخصومات بدقة وفورية.',
-                      icon: Icons.calculate_rounded,
-                      gradientColors: const [Color(0xFFE65100), Color(0xFFFF9800)],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const SavingsCalculatorScreen()),
-                        );
-                      },
-                    ),
+
                     _buildGridToolCard(
                       title: 'شارك كوبون',
                       subtitle: 'اقترح وانشر كوبونات للمجتمع.',
