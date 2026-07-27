@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/coupon.dart';
-import '../widgets/coupon_card.dart';
 import '../utils/theme.dart';
 import '../services/remote_config_service.dart';
 import '../services/api_service.dart';
@@ -266,7 +265,7 @@ class _TopOffersScreenState extends State<TopOffersScreen> {
         // 1. نسخ الكوبون إذا وجد
         if (coupon.code.isNotEmpty) {
           await Clipboard.setData(ClipboardData(text: coupon.code));
-          ApiService.incrementCouponVisits(coupon.id);
+          ApiService.incrementCouponVisits(coupon.id, storeId: coupon.storeId);
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('تم نسخ الكود بنجاح',

@@ -44,7 +44,7 @@ class _ApiCouponCardState extends State<ApiCouponCard> {
   // ✅ فتح الموقع جوه التطبيق بعد نسخ الكود
   Future<void> _revealAndOpen() async {
     await Clipboard.setData(ClipboardData(text: widget.coupon.code));
-    ApiService.incrementCouponVisits(widget.coupon.id);
+    ApiService.incrementCouponVisits(widget.coupon.id, storeId: widget.coupon.storeId);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

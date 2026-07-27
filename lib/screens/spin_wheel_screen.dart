@@ -319,8 +319,11 @@ class _SpinWheelScreenState extends State<SpinWheelScreen>
                             onPressed: () {
                               Clipboard.setData(
                                   ClipboardData(text: winner['code']));
-                              if (winner['id'] != null) {
-                                ApiService.incrementCouponVisits(winner['id'].toString());
+                              if (winner['id'] != null || winner['storeId'] != null) {
+                                ApiService.incrementCouponVisits(
+                                  winner['id']?.toString() ?? '',
+                                  storeId: winner['storeId']?.toString(),
+                                );
                               }
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

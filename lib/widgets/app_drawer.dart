@@ -9,7 +9,6 @@ import '../cubits/auth/auth_state.dart';
 import '../models/api_models.dart';
 import '../models/auth_models.dart';
 import '../screens/auth/profile_screen.dart';
-import '../screens/in_app_webview_screen.dart';
 import '../services/api_service.dart';
 import '../utils/theme.dart';
 import '../screens/submit_coupon_screen.dart';
@@ -24,6 +23,7 @@ class AppDrawer extends StatefulWidget {
   final VoidCallback? onNavigateToTopOffers;
   final VoidCallback? onNavigateToStores;
   final VoidCallback? onNavigateToHome;
+  final VoidCallback? onNavigateToWheel;
   final ValueChanged<int>? onSelectTab;
   final int selectedIndex;
 
@@ -37,6 +37,7 @@ class AppDrawer extends StatefulWidget {
     this.onNavigateToTopOffers,
     this.onNavigateToStores,
     this.onNavigateToHome,
+    this.onNavigateToWheel,
     this.onSelectTab,
     this.selectedIndex = 0,
   });
@@ -311,10 +312,20 @@ class _AppDrawerState extends State<AppDrawer> {
 
                   _buildDrawerItem(
                     context: context,
+                    icon: Icons.toys_rounded,
+                    title: 'عجلة الحظ 🎁',
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onNavigateToWheel?.call();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
                     icon: Icons.star_outline,
                     title: 'قيمنا ⭐',
                     onTap: () {
                       Navigator.pop(context);
+                      _launch('https://apps.apple.com/us/app/copony-كوبوني/id6792677261');
                     },
                   ),
                   _buildDrawerItem(

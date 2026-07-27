@@ -325,27 +325,39 @@ class ApiService {
     }
   }
 
-  // ─── Record Coupon Visit / Click ──────────────────────────────────
-  static Future<void> incrementCouponVisits(String couponId) async {
-    if (couponId.isEmpty) return;
-    try {
-      final endpoints = [
-        '$baseUrl/api/coupons/$couponId/visit',
-        '$baseUrl/api/coupons/$couponId/click',
-        '$baseUrl/api/coupons/visit',
-        '$baseUrl/api/coupons/click',
-      ];
+  // ─── Record Coupon / Store Visit / Click ──────────────────────────────────
+  static Future<void> incrementCouponVisits(String couponId, {String? storeId, List<Coupon>? coupons}) async {
+    String cId = couponId.trim();
+    final String sId = (storeId ?? '').trim();
 
-      for (final ep in endpoints) {
-        try {
-          final res = await http.post(
-            Uri.parse(ep),
-            headers: _headers,
-            body: jsonEncode({'coupon_id': couponId, 'id': couponId}),
-          ).timeout(const Duration(seconds: 4));
-          if (res.statusCode == 200 || res.statusCode == 201) break;
-        } catch (_) {}
-      }
+    // إذا تم الضغط على متجر بدلاً من كوبون، نبحث عن أي كوبون تابع للمتجر لضمان تسجيل الزيارة
+    if (cId.isEmpty && sId.isNotEmpty && coupons != null && coupons.isNotEmpty) {
+      try {
+        final matching = coupons.firstWhere(
+          (c) => c.storeId == sId,
+          orElse: () => Coupon(id: '', storeId: '', storeName: '', storeLogo: '', storeImage: '', title: '', code: '', expiryText: '', badge: '', storeUrl: '', discountPercent: 0, category: '', discountRaw: ''),
+        );
+        if (matching.id.isNotEmpty) {
+          cId = matching.id;
+        }
+      } catch (_) {}
+    }
+
+    final String targetId = cId.isNotEmpty ? cId : sId;
+    if (targetId.isEmpty) return;
+
+    final headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    // إرسال طلب POST واحد فقط لضمان زيادة العداد بمقدار (1) فقط
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/api/coupons/$targetId/track'),
+        headers: headers,
+        body: '{}',
+      ).timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 }

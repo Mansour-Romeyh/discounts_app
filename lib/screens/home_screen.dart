@@ -595,7 +595,10 @@ class _HomeScreenState extends State<HomeScreen> {
   //       ));
   // }
 
-  Future<void> _launch(String url) async {
+  Future<void> _launch(String url, {String? couponId, String? storeId}) async {
+    if (couponId != null || storeId != null) {
+      ApiService.incrementCouponVisits(couponId ?? '', storeId: storeId, coupons: _coupons);
+    }
     if (RemoteConfigService.isReviewMode) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -622,6 +625,14 @@ class _HomeScreenState extends State<HomeScreen> {
         site: _site,
         hero: _hero,
         selectedIndex: _selectedNavIndex == 3 ? 2 : _selectedNavIndex,
+        onNavigateToWheel: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SpinWheelScreen(coupons: _coupons),
+            ),
+          );
+        },
         onNavigateToCoupons: () {
           Navigator.push(
             context,
@@ -1826,8 +1837,8 @@ class _HomeScreenState extends State<HomeScreen> {
             index: i % _stores.length,
             totalItems: _stores.length,
             onTap: () {
-              final url = looped[i].url;
-              if (url.isNotEmpty) _launch(url);
+              final store = looped[i];
+              if (store.url.isNotEmpty) _launch(store.url, storeId: store.id);
             },
           ),
         ),
@@ -1920,7 +1931,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       GestureDetector(
                         onTap: () async {
                           await Clipboard.setData(ClipboardData(text: coupon.code));
-                          ApiService.incrementCouponVisits(coupon.id);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text('تم نسخ الكود: ${coupon.code}',
@@ -1932,7 +1942,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           }
                           if (coupon.storeUrl.isNotEmpty) {
                             await Future.delayed(const Duration(milliseconds: 600));
-                            _launch(coupon.storeUrl);
+                            _launch(coupon.storeUrl, couponId: coupon.id, storeId: coupon.storeId);
                           }
                         },
                         child: Container(
@@ -1982,7 +1992,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final discount = _getStoreDiscountText(store.name);
               return GestureDetector(
                 onTap: () {
-                  if (store.url.isNotEmpty) _launch(store.url);
+                  if (store.url.isNotEmpty) _launch(store.url, storeId: store.id);
                 },
                 child: Container(
                   width: 140,
@@ -2530,15 +2540,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.95,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) {
                     final store = _stores[i];
-                    final discount = _getStoreDiscountText(store.name);
                     return GestureDetector(
                       onTap: () {
-                        if (store.url.isNotEmpty) _launch(store.url);
+                        if (store.url.isNotEmpty) _launch(store.url, storeId: store.id);
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -2606,24 +2615,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              discount,
-                              style: AppTheme.tajawal(
-                                color: const Color(0xFFFF485A),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 10),
                             Text(
                               store.name,
                               style: AppTheme.tajawal(
-                                color: const Color(0xFF888888),
-                                fontSize: 11,
+                                color: const Color(0xFF333333),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 2,
