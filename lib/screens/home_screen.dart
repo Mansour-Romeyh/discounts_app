@@ -16,13 +16,9 @@ import '../services/api_service.dart';
 import '../utils/theme.dart';
 import '../widgets/coupon_card.dart';
 import '../widgets/store_item.dart';
-import '../widgets/filter_sheet.dart';
-import '../screens/all_coupons_screen.dart';
-import '../screens/top_offers_screen.dart';
-import 'submit_coupon_screen.dart';
 import 'spin_wheel_screen.dart';
 import '../services/notification_service.dart';
-import '../widgets/review_store_view.dart';
+import '../widgets/store_catalog_view.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -1458,7 +1454,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeTab() {
-    return const ReviewStoreView();
+    return const StoreCatalogView();
   }
 
   Widget _buildToolsHubSection() {
@@ -2006,14 +2002,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return '🌐';
   }
 
-  // ─── Review Mode Tools ──────────────────────────────────────────────
+  // ─── Shopping Checklist Tools ──────────────────────────────────────────
   List<Map<String, dynamic>> _checklist = [];
   final _checklistController = TextEditingController();
 
   Future<void> _loadChecklist() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final str = prefs.getString('review_shopping_checklist');
+      final str = prefs.getString('shopping_checklist');
       if (str != null) {
         setState(() {
           _checklist = List<Map<String, dynamic>>.from(jsonDecode(str));
@@ -2025,7 +2021,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _saveChecklist() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('review_shopping_checklist', jsonEncode(_checklist));
+      await prefs.setString('shopping_checklist', jsonEncode(_checklist));
     } catch (_) {}
   }
 
@@ -2060,7 +2056,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _saveChecklist();
   }
 
-  Widget _buildReviewArticlesTab() {
+  Widget _buildArticlesTab() {
     final List<Map<String, String>> articles = [
       {
         'title': 'كيف تخطط لميزانية تسوق ذكية؟ 📈',
@@ -2279,7 +2275,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildReviewChecklistTab() {
+  Widget _buildShoppingChecklistTab() {
     return Container(
       color: const Color(0xFFF9F9F9),
       child: Column(
@@ -2293,96 +2289,96 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: TextField(
                     controller: _checklistController,
                     decoration: InputDecoration(
-                      hintText: 'إضافة منتج أو خطة شراء...',
-                      hintStyle: AppTheme.tajawal(color: Colors.grey, fontSize: 13),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppTheme.primary, width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    style: AppTheme.tajawal(fontSize: 14),
-                    onSubmitted: (_) => _addChecklistItem(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _addChecklistItem,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _checklist.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.playlist_add_rounded, size: 64, color: Colors.grey.shade400),
-                        const SizedBox(height: 16),
-                        Text(
-                          'قائمة التسوق فارغة. ابدأ بإضافة منتجات!',
-                          style: AppTheme.tajawal(color: Colors.grey.shade600, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _checklist.length,
-                    itemBuilder: (context, index) {
-                      final item = _checklist[index];
-                      final isDone = item['done'] as bool;
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 2,
-                        shadowColor: Colors.black.withOpacity(0.03),
-                        child: ListTile(
-                          leading: Checkbox(
-                            value: isDone,
-                            activeColor: AppTheme.accent,
-                            onChanged: (_) => _toggleChecklistItem(item['id']),
-                          ),
-                          title: Text(
-                            item['title'],
-                            style: AppTheme.tajawal(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              decoration: isDone ? TextDecoration.lineThrough : null,
-                              color: isDone ? Colors.grey : Colors.black87,
-                            ),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                            onPressed: () => _deleteChecklistItem(item['id']),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
+                       hintText: 'إضافة منتج أو خطة شراء...',
+                       hintStyle: AppTheme.tajawal(color: Colors.grey, fontSize: 13),
+                       border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12),
+                         borderSide: BorderSide(color: Colors.grey.shade300),
+                       ),
+                       focusedBorder: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12),
+                         borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                       ),
+                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                     ),
+                     style: AppTheme.tajawal(fontSize: 14),
+                     onSubmitted: (_) => _addChecklistItem(),
+                   ),
+                 ),
+                 const SizedBox(width: 12),
+                 ElevatedButton(
+                   onPressed: _addChecklistItem,
+                   style: ElevatedButton.styleFrom(
+                     backgroundColor: AppTheme.primary,
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                   ),
+                   child: const Icon(Icons.add, color: Colors.white),
+                 ),
+               ],
+             ),
+           ),
+           Expanded(
+             child: _checklist.isEmpty
+                 ? Center(
+                     child: Column(
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       children: [
+                         Icon(Icons.playlist_add_rounded, size: 64, color: Colors.grey.shade400),
+                         const SizedBox(height: 16),
+                         Text(
+                           'قائمة التسوق فارغة. ابدأ بإضافة منتجات!',
+                           style: AppTheme.tajawal(color: Colors.grey.shade600, fontSize: 14),
+                         ),
+                       ],
+                     ),
+                   )
+                 : ListView.builder(
+                     padding: const EdgeInsets.all(16),
+                     itemCount: _checklist.length,
+                     itemBuilder: (context, index) {
+                       final item = _checklist[index];
+                       final isDone = item['done'] as bool;
+                       return Card(
+                         margin: const EdgeInsets.only(bottom: 8),
+                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                         elevation: 2,
+                         shadowColor: Colors.black.withOpacity(0.03),
+                         child: ListTile(
+                           leading: Checkbox(
+                             value: isDone,
+                             activeColor: AppTheme.accent,
+                             onChanged: (_) => _toggleChecklistItem(item['id']),
+                           ),
+                           title: Text(
+                             item['title'],
+                             style: AppTheme.tajawal(
+                               fontSize: 14,
+                               fontWeight: FontWeight.w600,
+                               decoration: isDone ? TextDecoration.lineThrough : null,
+                               color: isDone ? Colors.grey : Colors.black87,
+                             ),
+                           ),
+                           trailing: IconButton(
+                             icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                             onPressed: () => _deleteChecklistItem(item['id']),
+                           ),
+                         ),
+                       );
+                     },
+                   ),
+           ),
+         ],
+       ),
+     );
+   }
 
   Widget _buildStoresTab() {
-    return _buildReviewArticlesTab();
+    return _buildArticlesTab();
   }
 
   Widget _buildFavoritesTab() {
-    return _buildReviewChecklistTab();
+    return _buildShoppingChecklistTab();
   }
 
   Widget _buildGridToolCard({

@@ -4,14 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/theme.dart';
 import '../screens/spin_wheel_screen.dart';
 
-class ReviewStoreView extends StatefulWidget {
-  const ReviewStoreView({super.key});
+class StoreCatalogView extends StatefulWidget {
+  const StoreCatalogView({super.key});
 
   @override
-  State<ReviewStoreView> createState() => _ReviewStoreViewState();
+  State<StoreCatalogView> createState() => _StoreCatalogViewState();
 }
 
-class _ReviewStoreViewState extends State<ReviewStoreView> {
+class _StoreCatalogViewState extends State<StoreCatalogView> {
   String _selectedCategory = 'الكل';
   final List<Map<String, dynamic>> _cart = [];
   double _totalSaved = 0.0;
@@ -110,7 +110,7 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading savings history in review: $e');
+      debugPrint('Error loading savings history: $e');
     }
   }
 
@@ -646,9 +646,9 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                 child: Column(
                   children: [
-                    _buildStatsCardReview(),
+                    _buildStatsCard(),
                     const SizedBox(height: 12),
-                    _buildGoalCardReview(),
+                    _buildGoalCard(),
                     const SizedBox(height: 16),
                     _buildQuickToolsRow(),
                   ],
@@ -822,7 +822,7 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
     );
   }
 
-  Widget _buildStatsCardReview() {
+  Widget _buildStatsCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -895,7 +895,7 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
     );
   }
 
-  void _showEditGoalDialogReview() {
+  void _showEditGoalDialog() {
     final controller = TextEditingController(text: _savingsGoal.toStringAsFixed(0));
     showDialog(
       context: context,
@@ -957,7 +957,7 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
     );
   }
 
-  Widget _buildGoalCardReview() {
+  Widget _buildGoalCard() {
     final progressRatio = (_totalSaved / _savingsGoal).clamp(0.0, 1.0);
     final percentage = (progressRatio * 100).toStringAsFixed(0);
 
@@ -983,21 +983,21 @@ class _ReviewStoreViewState extends State<ReviewStoreView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: [
-                  const Icon(Icons.track_changes_rounded, color: AppTheme.primary, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    'هدف التوفير المستهدف',
-                    style: AppTheme.tajawal(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                ],
-              ),
+                 children: [
+                   const Icon(Icons.track_changes_rounded, color: AppTheme.primary, size: 22),
+                   const SizedBox(width: 8),
+                   Text(
+                     'هدف التوفير المستهدف',
+                     style: AppTheme.tajawal(
+                       fontWeight: FontWeight.bold,
+                       fontSize: 15,
+                       color: Colors.grey.shade800,
+                     ),
+                   ),
+                 ],
+               ),
               GestureDetector(
-                onTap: _showEditGoalDialogReview,
+                onTap: _showEditGoalDialog,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(

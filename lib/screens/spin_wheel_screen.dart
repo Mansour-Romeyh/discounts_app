@@ -97,7 +97,7 @@ class _SpinWheelScreenState extends State<SpinWheelScreen>
   }
 
   void _matchRealCoupons() {
-    final List<Map<String, dynamic>> reviewTips = [
+    final List<Map<String, dynamic>> savingTips = [
       {
         'label': 'نصيحة الميزانية',
         'tip': 'حدد ميزانية شهرية للمشتريات والتزم بها لتتجنب النفقات الزائدة.',
@@ -148,7 +148,7 @@ class _SpinWheelScreenState extends State<SpinWheelScreen>
       },
     ];
     _wheelItems.clear();
-    _wheelItems.addAll(reviewTips);
+    _wheelItems.addAll(savingTips);
   }
 
   @override
