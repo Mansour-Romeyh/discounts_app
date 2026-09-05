@@ -11,7 +11,6 @@ import '../models/auth_models.dart';
 import '../screens/auth/profile_screen.dart';
 import '../services/api_service.dart';
 import '../utils/theme.dart';
-import '../screens/submit_coupon_screen.dart';
 
 
 class AppDrawer extends StatefulWidget {
@@ -247,8 +246,8 @@ class _AppDrawerState extends State<AppDrawer> {
                   const SizedBox(height: 12),
                   _buildDrawerItem(
                     context: context,
-                    icon: Icons.home_outlined,
-                    title: 'الرئيسية',
+                    icon: Icons.storefront_outlined,
+                    title: 'المتجر الرئيسي',
                     isSelected: widget.selectedIndex == 0,
                     onTap: () {
                       Navigator.pop(context);
@@ -257,8 +256,8 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _buildDrawerItem(
                     context: context,
-                    icon: Icons.store_outlined,
-                    title: 'المتاجر',
+                    icon: Icons.article_outlined,
+                    title: 'مقالات ونصائح التسوق',
                     isSelected: widget.selectedIndex == 1,
                     onTap: () {
                       Navigator.pop(context);
@@ -267,53 +266,28 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _buildDrawerItem(
                     context: context,
-                    icon: Icons.discount_outlined,
-                    title: 'جميع الكوبونات',
-                    isSelected: false, // شاشة منفصلة
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onNavigateToCoupons?.call();
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.local_offer_outlined,
-                    title: 'كوبونات الخصم المميزة',
-                    isSelected: false, // شاشة منفصلة
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onNavigateToTopOffers?.call();
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.star_outline,
-                    title: 'المفضلة',
+                    icon: Icons.widgets_outlined,
+                    title: 'أدوات التوفير',
                     isSelected: widget.selectedIndex == 2,
                     onTap: () {
                       Navigator.pop(context);
                       widget.onSelectTab?.call(2);
                     },
                   ),
-
                   _buildDrawerItem(
                     context: context,
-                    icon: Icons.add_circle_outline_rounded,
-                    title: 'اقترح كوبون جديد',
-                    isSelected: false,
+                    icon: Icons.checklist_rtl_rounded,
+                    title: 'قائمة المشتريات والتسوق',
+                    isSelected: widget.selectedIndex == 3,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
-                      );
+                      widget.onSelectTab?.call(3);
                     },
                   ),
-
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.toys_rounded,
-                    title: 'عجلة الحظ 🎁',
+                    title: 'عجلة التوفير والجوائز 🎁',
                     onTap: () {
                       Navigator.pop(context);
                       widget.onNavigateToWheel?.call();

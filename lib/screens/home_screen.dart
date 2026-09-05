@@ -22,7 +22,6 @@ import '../screens/top_offers_screen.dart';
 import 'submit_coupon_screen.dart';
 import 'spin_wheel_screen.dart';
 import '../services/notification_service.dart';
-import '../services/remote_config_service.dart';
 import '../widgets/review_store_view.dart';
 
 
@@ -251,86 +250,17 @@ class _HomeScreenState extends State<HomeScreen> {
   // ─── Load All Data ─────────────────────────────────────────────────
   Future<void> _loadData() async {
     setState(() {
-      _loading = true;
+      _loading = false;
       _error = null;
     });
     try {
-      // جيب كل البيانات بالتوازي
-      final results = await Future.wait([
-        ApiService.fetchHome(), // 0
-        ApiService.fetchLabels()
-            .catchError((_) => AppLabels(countries: [], durations: [])), // 1
-        ApiService.fetchStoresForFilters().catchError((_) => <String>[]), // 2
-      ]);
-
-      final bundle = results[0] as HomeBundle;
-
-      print('=== HERO ===');
-      print('title: ${bundle.hero?.title}');
-      print('description: ${bundle.hero?.description}');
-      print('bgImage: ${bundle.hero?.bgImageUrl}');
-      print('sideImage: ${bundle.hero?.imageUrl}');
-      print('hero is null: ${bundle.hero == null}');
-      print('=== SITE ===');
-      print('name: ${bundle.site?.name}');
-      final labels = results[1] as AppLabels;
-      final filterStores = results[2] as List<String>;
-
-      // لو الـ bundle ما جبتش كوبونات كافية، جيب من الـ endpoints المنفصلة
-      List<Coupon> coupons = bundle.coupons;
-      if (coupons.isEmpty) {
-        coupons = await ApiService.fetchAllCoupons();
-      }
-
-      setState(() {
-        _stores = bundle.stores;
-        _offerStores = bundle.offers.isNotEmpty ? bundle.offers : bundle.stores;
-        _coupons = coupons;
-        _site = bundle.site;
-        _hero = bundle.hero;
-        _labels = labels;
-        _filterStores = filterStores;
-        _loading = false;
-      });
-    } catch (e) {
-      // Fallback: جيب كل حاجة لوحدها
-      try {
-        final results = await Future.wait([
-          ApiService.fetchStores().catchError((_) => <Store>[]),
-          ApiService.fetchAllCoupons().catchError((_) => <Coupon>[]),
-          ApiService.fetchOffers().catchError((_) => <Store>[]),
-          ApiService.fetchLabels()
-              .catchError((_) => AppLabels(countries: [], durations: [])),
-          ApiService.fetchStoresForFilters().catchError((_) => <String>[]),
-          ApiService.fetchHero()
-              .catchError((_) => HeroData(title: '', description: '')),
-          ApiService.fetchSite()
-              .catchError((_) => SiteInfo(name: '', tagline: '')),
-        ]);
+      final siteInfo = await ApiService.fetchSite().catchError((_) => SiteInfo(name: ''));
+      if (mounted && siteInfo.name.isNotEmpty) {
         setState(() {
-          _stores = results[0] as List<Store>;
-          _coupons = results[1] as List<Coupon>;
-          final offers = results[2] as List<Store>;
-          _offerStores = offers.isNotEmpty ? offers : _stores;
-          _labels = results[3] as AppLabels;
-          _filterStores = results[4] as List<String>;
-          final heroFallback = results[5] as HeroData;
-          final siteFallback = results[6] as SiteInfo;
-          _hero = heroFallback.title.isNotEmpty ? heroFallback : null;
-          _site = siteFallback.name.isNotEmpty ? siteFallback : null;
-          _loading = false;
-        });
-      } catch (e2) {
-        setState(() {
-          _error =
-              'تعذّر الاتصال بالسيرفر.\nتحقق من اتصال الإنترنت وحاول مجدداً.';
-          _loading = false;
+          _site = siteInfo;
         });
       }
-    }
-    if (_offerStores.isNotEmpty) _initSlider();
-    // أعد تشغيل الـ stores scroll بعد تحميل البيانات
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startStoresScroll());
+    } catch (_) {}
   }
 
   void _initSlider() {
@@ -599,16 +529,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (couponId != null || storeId != null) {
       ApiService.incrementCouponVisits(couponId ?? '', storeId: storeId, coupons: _coupons);
     }
-    if (RemoteConfigService.isReviewMode) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('تم نسخ الرابط بنجاح! 🔗', style: AppTheme.tajawal(color: Colors.white, fontWeight: FontWeight.bold)),
-          backgroundColor: AppTheme.primary,
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
-      return;
-    }
     try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (_) {}
@@ -671,26 +591,17 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 65,
           child: FloatingActionButton(
             onPressed: () {
-              if (RemoteConfigService.isReviewMode) {
-                setState(() {
-                  _selectedNavIndex = 2; // Switch to Tools tab
-                });
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AllCouponsScreen(coupons: _coupons),
-                  ),
-                );
-              }
+              setState(() {
+                _selectedNavIndex = 2; // Switch to Tools tab
+              });
             },
-            backgroundColor: (RemoteConfigService.isReviewMode && _selectedNavIndex == 2)
+            backgroundColor: _selectedNavIndex == 2
                 ? const Color(0xFFFF485A)
                 : AppTheme.primary,
             elevation: 8,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
-            child: Icon(
-              RemoteConfigService.isReviewMode ? Icons.widgets_rounded : Icons.local_offer_rounded,
+            child: const Icon(
+              Icons.widgets_rounded,
               color: Colors.white,
               size: 32,
             ),
@@ -1396,14 +1307,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                _navItem(0, Icons.home_rounded, 'الرئيسية'),
+                _navItem(0, Icons.storefront_rounded, 'المتجر'),
                 const SizedBox(width: 12),
-                _navItem(1, Icons.storefront_rounded, 'المتاجر'),
+                _navItem(1, Icons.article_rounded, 'المقالات'),
               ],
             ),
             Row(
               children: [
-                _navItem(3, Icons.star_rounded, 'المفضلة'),
+                _navItem(3, Icons.checklist_rtl_rounded, 'قائمة التسوق'),
                 const SizedBox(width: 12),
                 _navItem(4, Icons.more_horiz_rounded, 'المزيد', () {
                   _scaffoldKey.currentState?.openDrawer();
@@ -1547,27 +1458,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeTab() {
-    if (RemoteConfigService.isReviewMode) {
-      return const ReviewStoreView();
-    }
-    return CustomScrollView(
-      controller: _mainScrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        _buildAppBar(),
-        if (_loading)
-          SliverToBoxAdapter(
-            child: _buildHomeShimmer(),
-          )
-        else ...[
-          SliverToBoxAdapter(child: _buildHorizontalStoresCircleList()),
-          SliverToBoxAdapter(child: _buildFeaturedSection()),
-          SliverToBoxAdapter(child: _buildTopCouponsSection()),
-          SliverToBoxAdapter(child: _buildTopStoresSection()),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-        ],
-      ],
-    );
+    return const ReviewStoreView();
   }
 
   Widget _buildToolsHubSection() {
@@ -2487,235 +2378,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildStoresTab() {
-    if (RemoteConfigService.isReviewMode) {
-      return _buildReviewArticlesTab();
-    }
-    return Container(
-      color: const Color(0xFFF9F9F9),
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          _buildAppBar(),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFEBEBEB), width: 1),
-                  ),
-                  child: Text(
-                    'المتاجر',
-                    style: AppTheme.tajawal(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF555555),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (_stores.isEmpty)
-            SliverToBoxAdapter(
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.5,
-                alignment: Alignment.center,
-                child: Text(
-                  'لا توجد متاجر متاحة حالياً',
-                  style: AppTheme.tajawal(color: Colors.grey),
-                ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.95,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final store = _stores[i];
-                    return GestureDetector(
-                      onTap: () {
-                        if (store.url.isNotEmpty) _launch(store.url, storeId: store.id);
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFEBEBEB), width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.01),
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
-                            )
-                          ],
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Center(
-                                child: store.logoUrl.isNotEmpty
-                                    ? (store.logoUrl.startsWith('http')
-                                        ? Image.network(
-                                            store.logoUrl,
-                                            height: 52,
-                                            fit: BoxFit.contain,
-                                            errorBuilder: (_, __, ___) => Text(
-                                              store.name,
-                                              style: AppTheme.tajawal(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          )
-                                        : (store.logoUrl.startsWith('assets/')
-                                            ? Image.asset(
-                                                store.logoUrl,
-                                                height: 52,
-                                                fit: BoxFit.contain,
-                                                errorBuilder: (_, __, ___) => Text(
-                                                  store.name,
-                                                  style: AppTheme.tajawal(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              )
-                                            : Text(
-                                                store.name,
-                                                style: AppTheme.tajawal(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              )))
-                                    : Text(
-                                        store.name,
-                                        style: AppTheme.tajawal(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              store.name,
-                              style: AppTheme.tajawal(
-                                color: const Color(0xFF333333),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  childCount: _stores.length,
-                ),
-              ),
-            ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ],
-      ),
-    );
+    return _buildReviewArticlesTab();
   }
 
   Widget _buildFavoritesTab() {
-    if (RemoteConfigService.isReviewMode) {
-      return _buildReviewChecklistTab();
-    }
-    final favoriteCoupons = _coupons.where((c) => _favoriteCouponIds.contains(c.id)).toList();
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        _buildAppBar(),
-        SliverToBoxAdapter(
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.all(16),
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                ),
-                child: Text(
-                  'المفضلة',
-                  style: AppTheme.tajawal(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textSecondaryinWhite,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (favoriteCoupons.isEmpty)
-          SliverToBoxAdapter(
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.5,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.star_border_rounded, size: 64, color: Colors.grey.shade400),
-                  const SizedBox(height: 16),
-                  Text(
-                    'لا توجد مفضلات حالياً',
-                    style: AppTheme.tajawal(color: AppTheme.textSecondaryinWhite, fontSize: 15),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) {
-                  final coupon = favoriteCoupons[i];
-                  return ApiCouponCard(
-                    key: ValueKey(coupon.id),
-                    coupon: coupon,
-                    index: i,
-                    totalItems: favoriteCoupons.length,
-                    isFavorite: true,
-                    onFavoriteToggle: () => _toggleFavorite(coupon.id),
-                  );
-                },
-                childCount: favoriteCoupons.length,
-              ),
-            ),
-          ),
-      ],
-    );
+    return _buildReviewChecklistTab();
   }
 
   Widget _buildGridToolCard({
@@ -3018,38 +2685,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
 
                     _buildGridToolCard(
-                      title: 'شارك كوبون',
-                      subtitle: 'اقترح وانشر كوبونات للمجتمع.',
-                      icon: Icons.add_moderator_rounded,
+                      title: 'المتجر والمنتجات',
+                      subtitle: 'تصفح المنتجات والبطاقات الرقمية.',
+                      icon: Icons.storefront_rounded,
                       gradientColors: const [Color(0xFF00796B), Color(0xFF26A69A)],
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const SubmitCouponScreen()),
-                        );
+                        setState(() {
+                          _selectedNavIndex = 0;
+                        });
                       },
                     ),
                     _buildGridToolCard(
-                      title: 'كل الكوبونات',
-                      subtitle: 'تصفح قائمة الكوبونات كاملة.',
-                      icon: Icons.local_offer_rounded,
+                      title: 'مقالات التسوق',
+                      subtitle: 'نصائح ذكية للتوفير والميزانية.',
+                      icon: Icons.article_rounded,
                       gradientColors: const [Color(0xFFC2185B), Color(0xFFF06292)],
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => AllCouponsScreen(coupons: _coupons)),
-                        );
+                        setState(() {
+                          _selectedNavIndex = 1;
+                        });
                       },
                     ),
                     _buildGridToolCard(
-                      title: 'المفضلة',
-                      subtitle: 'الوصول السريع للكوبونات المحفوظة.',
-                      icon: Icons.favorite_rounded,
+                      title: 'قائمة التسوق',
+                      subtitle: 'تنظيم مشترياتك وتتبع النفقات.',
+                      icon: Icons.checklist_rtl_rounded,
                       gradientColors: const [Color(0xFF0277BD), Color(0xFF29B6F6)],
                       onTap: () {
-                         setState(() {
-                           _selectedNavIndex = 3;
-                         });
+                        setState(() {
+                          _selectedNavIndex = 3;
+                        });
                       },
                     ),
                   ],

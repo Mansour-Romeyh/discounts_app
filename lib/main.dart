@@ -9,7 +9,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'services/notification_service.dart';
-import 'services/remote_config_service.dart';
 import 'cubits/auth/auth_cubit.dart';
 import 'cubits/profile/profile_cubit.dart';
 import 'screens/auth/auth_gate.dart';
@@ -38,13 +37,6 @@ Future<void> _initServicesAsync() async {
         .timeout(const Duration(seconds: 4));
   } catch (e) {
     debugPrint('❌ Firebase.initializeApp failed or timed out: $e');
-  }
-
-  try {
-    await RemoteConfigService.initialize()
-        .timeout(const Duration(seconds: 3));
-  } catch (e) {
-    debugPrint('❌ RemoteConfigService.initialize failed or timed out: $e');
   }
 
   try {

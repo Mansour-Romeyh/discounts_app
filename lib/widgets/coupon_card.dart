@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/theme.dart';
 import 'dashed_border.dart';
-import '../services/remote_config_service.dart';
 import '../services/api_service.dart';
 
 
@@ -64,7 +63,7 @@ class _ApiCouponCardState extends State<ApiCouponCard> {
     }
 
     // ✅ افتح الموقع جوه التطبيق
-    if (!RemoteConfigService.isReviewMode && widget.coupon.storeUrl.isNotEmpty && mounted) {
+    if (widget.coupon.storeUrl.isNotEmpty && mounted) {
       await Future.delayed(const Duration(milliseconds: 600));
       if (mounted) {
         _launch(widget.coupon.storeUrl);
