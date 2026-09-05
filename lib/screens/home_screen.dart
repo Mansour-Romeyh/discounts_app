@@ -17,6 +17,9 @@ import '../utils/theme.dart';
 import '../widgets/coupon_card.dart';
 import '../widgets/store_item.dart';
 import 'spin_wheel_screen.dart';
+import 'all_coupons_screen.dart';
+import 'top_offers_screen.dart';
+import 'submit_coupon_screen.dart';
 import '../services/notification_service.dart';
 import '../widgets/store_catalog_view.dart';
 
