@@ -22,6 +22,7 @@ import 'top_offers_screen.dart';
 import 'submit_coupon_screen.dart';
 import '../services/notification_service.dart';
 import '../widgets/store_catalog_view.dart';
+import '../widgets/filter_sheet.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -253,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _error = null;
     });
     try {
-      final siteInfo = await ApiService.fetchSite().catchError((_) => SiteInfo(name: ''));
+      final siteInfo = await ApiService.fetchSite().catchError((_) => SiteInfo(name: '', tagline: ''));
       if (mounted && siteInfo.name.isNotEmpty) {
         setState(() {
           _site = siteInfo;
